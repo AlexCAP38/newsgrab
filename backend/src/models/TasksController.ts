@@ -1,8 +1,7 @@
 import mysql from 'mysql2/promise';
 import logger from '../services/logger.ts';
-import type {News} from '../routes/newsList.ts';
-import {checkNews} from '../utils/checkNews.ts';
-import type {DBOption, Task} from '../types/types.ts';
+import {DBOption, Task} from '../types/types.ts';
+import returnModError, {appError} from '../utils/returnModError.ts';
 
 export default class TaskController {
 
@@ -12,32 +11,28 @@ export default class TaskController {
         this.pool = option.pool;
     }
 
-    async create(task: Task): Promise<Task> {
+    async create(task: Task): Promise<Task[] | void> {
         const {id, name, userId, templateId} = task;
-        // const cleanNews = await checkNews([], this.pool);
 
-        // if (cleanNews.length === 0) {
-        //     return;
-        // }
+        const queryCreate = 'INSERT INTO `tasks`(`id`, `name`, `userId`, `templateId`) VALUES (?, ?, ?, ?)';
+        const queryResult = 'SELECT * FROM `tasks` WHERE `userId` = ?';
+        const queryChecking = 'SELECT * FROM `tasks` WHERE `templateId` = ?';
 
-        // // Запись в базу
-        // const placeholders = cleanNews.map(() => '(?, ?, ?, ?)').join(', ');
-        // const valueFlat = cleanNews.flat();
+        // Проверка на дубликат названию шаблона
+        const [taskExists] = await this.pool.execute(queryChecking, [templateId]);
 
-        const query = 'INSERT INTO `tasks`(`id`, `name`, `userId`, `templateId`) VALUES (?, ?, ?, ?)';
+        if (Array.isArray(taskExists) && taskExists.length !== 0) throw appError(409, 'The task exists');
 
-        try {
-            const [result, row] = await this.pool.execute(query, [id, name, userId, templateId]);
-            logger.info({info: result}, 'MySQl: Create row in table TASKS');
-            return task;
-        }
-        catch (error) {
-            logger.error(error, 'MySQl: Error creating rows in table TASKS');
-            throw error;
-        }
+        // Запись
+        await this.pool.execute(queryCreate, [id, name, userId, templateId]);
+        logger.info({info: task}, 'MySQl: Create row in table TASKS');
+
+        const [result] = await this.pool.execute(queryResult, [userId]);
+
+        return result as Task[];
     }
 
-    async read(idUser: string): Promise<Task[]> {
+    async read(idUser: string): Promise<Task[] | undefined> {
         const query = 'SELECT * FROM `tasks` WHERE `userId` = ?';
 
         try {
@@ -45,8 +40,8 @@ export default class TaskController {
             return rows as Task[];
         }
         catch (error) {
-            logger.error(error, 'MySQl: Error creating rows in table TASKS');
-            throw new Error('Internal Server Error');
+            logger.error(error, 'MySQl: Error reading rows in table TASKS');
+            returnModError(500, 'Internal Server Error');
         }
     }
 
@@ -68,26 +63,30 @@ export default class TaskController {
         // return result;
     }
 
-    async delete(tasksId: string): Promise<any> {
+    async delete(tasksId: string, userId: string): Promise<Task[] | undefined> {
         const queryDelete = 'DELETE FROM `tasks` WHERE `id` = ?';
         const querySelect = 'SELECT * FROM `tasks` WHERE `id` = ?';
+        const queryResult = 'SELECT * FROM `tasks` WHERE `userId` = ?';
 
         try {
-            const [beforeDelete] = await this.pool.execute(querySelect, [tasksId]);
+            // Проверяем существует задача
+            const [checkTaskBeforeDelete] = await this.pool.execute(querySelect, [tasksId]);
 
-            if (Array.isArray(beforeDelete) && beforeDelete.length === 0) {
-                return {message: `Tasks with id: ${tasksId} not found`};
+            if (Array.isArray(checkTaskBeforeDelete) && checkTaskBeforeDelete.length === 0) {
+                returnModError(404, `Tasks with id: ${tasksId} not found`);
             }
 
+            // Удаляем
             const [result] = await this.pool.execute(queryDelete, [tasksId]);
 
-            const [afterDelete] = await this.pool.execute(querySelect, [tasksId]);
+            // Возвращаем список оставшихся задач
+            const [afterDelete] = await this.pool.execute(queryResult, [userId]);
 
-            if (Array.isArray(afterDelete) && afterDelete.length === 0) return beforeDelete;
+            return afterDelete as Task[];
         }
         catch (error) {
             logger.error(error, 'MySQl: Error deleting row in table TASKS');
-            throw new Error('Internal Server Error');
+            returnModError(500, 'Internal Server Error');
         }
     }
 }

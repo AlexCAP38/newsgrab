@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise';
 import logger from '../services/logger.ts';
 import type {DBOption, Template} from '../types/types.ts';
+import returnModError from '../utils/returnModError.ts';
 
 export default class TemplatesController {
 
@@ -10,7 +11,7 @@ export default class TemplatesController {
         this.pool = option.pool;
     }
 
-    async create(template: Template): Promise<Template> {
+    async create(template: Template): Promise<Template | undefined> {
         const {id, name, userId} = template;
         // const cleanNews = await checkNews([], this.pool);
 
@@ -30,21 +31,21 @@ export default class TemplatesController {
             return template;
         }
         catch (error) {
-            logger.error(error, 'MySQl: Error creating rows in table TEMPLATE');
-            throw error;
+            logger.error(error, 'MySQl: Error creating rows in table TEMPLATES');
+            returnModError(500,'Internal Server Error');
         }
     }
 
-    async read(idUser: string): Promise<Template[]> {
-        const query = 'SELECT * FROM `templates` WHERE `userId` = ? OR `userId` IS NULL';
+    async read(idUser: string): Promise<Template[] | undefined> {
+        const query = 'SELECT * FROM `templates` WHERE `userId` = ? OR `userId` = "any"';
 
         try {
             const [rows] = await this.pool.execute(query, [idUser]);
             return rows as Template[];
         }
         catch (error) {
-            logger.error(error, 'MySQl: Error reading rows in table TEMPLATE');
-            throw new Error('Internal Server Error');
+            logger.error(error, 'MySQl: Error reading rows in table TEMPLATES');
+            returnModError(500,'Internal Server Error');
         }
     }
 

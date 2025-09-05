@@ -1,8 +1,8 @@
 import mysql from 'mysql2/promise';
 import logger from '../services/logger.ts';
-import type {News} from '../routes/newsList.ts';
 import {checkNews} from '../utils/checkNews.ts';
-import type {DBOption} from '../types/types.ts';
+import {DBOption, News} from '../types/types.ts';
+import returnModError from '../utils/returnModError.ts';
 
 export default class NewsController {
 
@@ -32,26 +32,24 @@ export default class NewsController {
             logger.info({info: result}, 'MySQl: Create rows in table');
         }
         catch (error) {
-            if (error instanceof Error) {
-                logger.error({err: error.message}, 'MySQl: Error created rows in table');
-            } else throw error;
+            logger.error(error, 'MySQl: Error created rows in table News');
+            returnModError(500, 'Internal Server Error');
         }
     }
 
-    async read(idUser: string): Promise<any> {
+    async read(idUser: string): Promise<News[] | undefined> {
 
         // const query = 'SELECT * FROM `news` WHERE `idUsers` = ?';
-         const query = 'SELECT * FROM `news`';
+        const query = 'SELECT * FROM `news`';
 
         try {
             // const [rows] = await this.pool.execute(query, idUser);
-            const [rows] = await this.pool.execute(query,[]);
-            return rows;
+            const [rows] = await this.pool.execute(query, []);
+            return rows as News[];
         }
         catch (error) {
-            // if (error instanceof Error) {
-            //     logger.error({err: error.message}, 'MySQl: Error created rows in table');
-            // } else throw error;
+            logger.error(error, `MySQl: Error read rows in table News. Userid: ${idUser}`);
+            returnModError(500, 'Internal Server Error');
         }
     }
 

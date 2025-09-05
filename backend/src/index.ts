@@ -46,6 +46,17 @@ const authService = new AuthService(usersDB);
 const app = express();
 app.use(express.json());
 
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173"); // разрешаем фронт
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); // ответ на preflight
+  }
+  next();
+});
+
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(undefined, {
     swaggerOptions: {
         url: '/swagger.json',
@@ -60,11 +71,11 @@ app.get('/swagger.json', (_req, res) => {
 
 app.use('/user', registrationRouter(authService));
 app.use('/user', loginRouter(authService));
-app.use('/newslist', newsList(authService, newsDB));
+app.use('/news', newsList(authService, newsDB));
 app.use('/tasks', tasksRouter(authService, taskDB));
 app.use('/templates', templatesRouter(authService, templateDB));
 
 app.listen(8888);
 
 
-taskScheduler(taskDB, newsDB, 30000);
+taskScheduler(taskDB, newsDB, 600_000); //Каждые десять минут проверять
