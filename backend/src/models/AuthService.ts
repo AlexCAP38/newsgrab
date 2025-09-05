@@ -5,6 +5,7 @@ import UserController from './UsersController.ts';
 import jwt from 'jsonwebtoken';
 import returnModError from '../utils/returnModError.ts';
 import {Request, Response, NextFunction} from 'express';
+import {DecodedToken} from '../types/types.ts';
 
 export default class AuthService {
 
@@ -18,22 +19,21 @@ export default class AuthService {
         this.userController = userController;
     }
 
-    checkUser = async (req: Request, res: Response, next: NextFunction) => {
+    checkUser = async (req: Request, res: Response, next: NextFunction): Promise<DecodedToken | undefined> => {
         const {authorization} = req.headers;
 
         if (!authorization) {
-            return res.status(401).json({message: 'Token is not available'})
+            returnModError(401, 'Token is not available');
         }
 
-        const token = authorization.split(' ')[1];
+        const token = authorization!.split(' ')[1];
 
         try {
-            const decoded = await jwt.verify(token, this.secretKey) as {id: string, login: string, email: string}
-            (req as any).user = decoded;
-            next();
+            const decoded = await jwt.verify(token, this.secretKey) as DecodedToken
+            return decoded;
         } catch (error) {
             if (error instanceof Error) {
-                return res.status(403).json({message: `${error.name}: ${error.message}`})
+                returnModError(402, error.message);
             }
         }
     }

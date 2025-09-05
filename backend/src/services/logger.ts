@@ -1,5 +1,9 @@
 import pino from 'pino';
 
+/**
+ * Логирование событий
+ */
+
 const logger = pino({
   transport: {
     target: 'pino-pretty',

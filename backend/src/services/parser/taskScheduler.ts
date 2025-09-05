@@ -5,6 +5,13 @@ import {fetchIrkNews} from "./adapters/irk_ru";
 import {fetchLentaNews} from "./adapters/lenta_ru";
 import {fetchNgsNews} from "./adapters/ngs_ru";
 
+/**
+ * Планировщик сбора новостей
+ * @param taskDB - контроллер задач
+ * @param newsDB - контроллер новостей
+ * @param intervalUpdate - Интервал обновления, по умолчанию каждый час проверять
+ */
+
 export function taskScheduler(taskDB: TaskController, newsDB: NewsController, intervalUpdate: number = 3_600_000): void {
     setInterval(async () => {
 

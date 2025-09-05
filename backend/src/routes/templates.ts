@@ -8,17 +8,19 @@ export default function templatesRouter(authService: AuthService, templateDB: Te
   const router = express.Router();
 
   // Получить шаблоны
-  router.get('', authService.checkUser, async (req: Request, res: Response, next: NextFunction) => {
+  router.get('', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await authService.checkUser(req, res, next);
 
-    const user = (req as any).user;
-
-    templateDB.read(user.id)
-      .then((result) => {
-        return res.status(200).json(result);
-      })
-      .catch((error) => {
-        return res.status(500).json(error.message);
-      })
+      if (user) {
+        const news = await templateDB.read(user.id);
+        res.status(200).json(news);
+      }
+    } catch (error) {
+      if (error && typeof (error) === 'object' && 'message' in error && 'code' in error) {
+        return res.status(error.code as number).json({message: error.message});
+      }
+    }
   })
 
   // Создать задачу пользователя

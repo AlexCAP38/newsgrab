@@ -1,3 +1,11 @@
+/**
+ * Утилита валидации Login, Email, Password
+ * @param login
+ * @param email
+ * @param password
+ * @returns
+ */
+
 export default function validationLEP(login: string, email: string, password: string) {
 
     const errors: string[] = [];

@@ -4,53 +4,6 @@ import logger from '../services/logger.ts';
 import AuthService from '../models/AuthService.ts';
 import validationLEP from '../utils/validationLEP.ts';
 
-/**
- * @swagger
- * /registration:
- *   post:
- *     summary: Регистрация пользователя
- *     tags:
- *       - User
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UserRegistration'
- *     responses:
- *       201:
- *         description: Пользователь успешно зарегистрирован
- *         content:
- *           application/json:
- *             schema:
- *                 $ref: '#/components/schemas/UserSuccessfully'
-*/
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     UserRegistration:
- *       type: object
- *       required:
- *         - login
- *         - email
- *         - password
- *       properties:
- *         token:
- *           type: string
- *           description: Токен пользователя
- *         email:
- *           type: string
- *           format: email
- *           description: email пользователя
- *         password:
- *           type: string
- *           format: password
- *           minLength: 8
- *           description: пароль пользователя
- */
-
 export interface UserRegistration {
     login: string;
     email: string;

@@ -1,2 +1,2 @@
 export * from './DataTable';
-export * from './mainTable';
+export * from './settingsTable';

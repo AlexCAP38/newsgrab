@@ -3,49 +3,6 @@ import type {Request, Response, NextFunction} from 'express';
 import logger from '../services/logger.ts';
 import AuthService from '../models/AuthService.ts';
 
-/**
- * @swagger
- * /login:
- *   post:
- *     summary: Авторизация пользователя
- *     tags:
- *       - User
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UserLogin'
- *     responses:
- *       200:
- *         description: Пользователь успешно авторизовался
- *         content:
- *           application/json:
- *             schema:
- *                 $ref: '#/components/schemas/UserLogin'
-*/
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     UserLogin:
- *       type: object
- *       required:
- *         - email
- *         - password
- *       properties:
- *         email:
- *           type: string
- *           format: email
- *           description: Email пользователя
- *         password:
- *           type: string
- *           format: password
- *           minLength: 8
- *           description: Пароль пользователя
- */
-
 export interface UserLogin {
     email: string;
     password: string;
